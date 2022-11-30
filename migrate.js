@@ -15,14 +15,17 @@ export class MigrateDatabase {
         this.mongodb = new MongoClient(process.env.MONGOHOST)
     }
 
-    async migrate(query, database, collection) {
+    async migrate(database) {
         await this.sequelize.sync({ force: false })
-        const myResult = await this.sequelize.query(`SELECT * FROM ${query}`, { type: QueryTypes.SELECT })
-        const db = this.mongodb.db(database)
-        const collectionMongo = db.collection(collection)
-        
-        if (myResult.length > 0) {
-            collectionMongo.insertMany(myResult)
-        } 
+        const allTables = await this.sequelize.query(`SHOW TABLES`, { type: QueryTypes.SHOWTABLES })
+        allTables.forEach(async (v) => {
+            const myResult = await this.sequelize.query(`SELECT * FROM ${v}`, { type: QueryTypes.SELECT })
+            const db = this.mongodb.db(database)
+            await db.createCollection(v)
+            const collectionMongo = await db.collection(v)
+            if (myResult.length > 0) {
+                collectionMongo.insertMany(myResult)
+            } 
+        })
     }
 }
