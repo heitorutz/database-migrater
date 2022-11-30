@@ -17,7 +17,7 @@ export class MigrateDatabase {
 
     async migrate(query, database, collection) {
         await this.sequelize.sync({ force: false })
-        const myResult = await this.sequelize.query(query, { type: QueryTypes.SELECT })
+        const myResult = await this.sequelize.query(`SELECT * FROM ${query}`, { type: QueryTypes.SELECT })
         const db = this.mongodb.db(database)
         const collectionMongo = db.collection(collection)
         
